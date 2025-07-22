@@ -88,8 +88,8 @@ export const GradientCanvas = forwardRef<HTMLDivElement, GradientCanvasProps>(
             <filter id="grainFilter">
               <feTurbulence
                 type={gradientState.filters.grainType === 'noise' ? 'turbulence' : 'fractalNoise'}
-                baseFrequency={`${0.05 + gradientState.filters.grain * 0.005}`}
-                numOctaves={`${Math.floor(1 + gradientState.filters.grain * 0.02)}`}
+                baseFrequency={`${0.01 + gradientState.filters.grain * 0.001}`} // More sensitive baseFrequency
+                numOctaves={`${Math.floor(1 + gradientState.filters.grain * 0.05)}`} // Wider range for numOctaves
                 seed={`${Math.random() * 1000}`}
                 result="noise"
               />
@@ -98,7 +98,7 @@ export const GradientCanvas = forwardRef<HTMLDivElement, GradientCanvasProps>(
                 values={`1 0 0 0 0
 0 1 0 0 0
 0 0 1 0 0
-0 0 0 ${gradientState.filters.grain * 0.01} 0`}
+0 0 0 ${gradientState.filters.grain * 0.05} 0`} // Increased alpha impact
               />
               <feBlend
                 in="SourceGraphic"
