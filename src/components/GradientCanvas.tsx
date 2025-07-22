@@ -39,9 +39,7 @@ export const GradientCanvas = forwardRef<HTMLDivElement, GradientCanvasProps>(
 
       // Add grain effect if enabled
       if (filters.grain > 0) {
-        // This is a simplified grain effect - in a real implementation,
-        // you'd overlay a noise texture or SVG pattern
-        filterStr += ` opacity(${1 - filters.grain / 200})`;
+        filterStr += ` url(#grainFilter)`;
       }
 
       return filterStr;
@@ -85,6 +83,31 @@ export const GradientCanvas = forwardRef<HTMLDivElement, GradientCanvasProps>(
 
     return (
       <div className="flex flex-col space-y-4">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          <defs>
+            <filter id="grainFilter">
+              <feTurbulence
+                type={gradientState.filters.grainType === 'noise' ? 'turbulence' : 'fractalNoise'}
+                baseFrequency={`${0.05 + gradientState.filters.grain * 0.005}`}
+                numOctaves={`${Math.floor(1 + gradientState.filters.grain * 0.02)}`}
+                seed={`${Math.random() * 1000}`}
+                result="noise"
+              />
+              <feColorMatrix
+                type="matrix"
+                values={`1 0 0 0 0
+0 1 0 0 0
+0 0 1 0 0
+0 0 0 ${gradientState.filters.grain * 0.01} 0`}
+              />
+              <feBlend
+                in="SourceGraphic"
+                in2="noise"
+                mode={gradientState.filters.grainBlendMode}
+              />
+            </filter>
+          </defs>
+        </svg>
         <div className="overflow-auto max-w-full max-h-full">
           <div
             ref={ref}
