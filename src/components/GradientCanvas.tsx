@@ -84,33 +84,32 @@ export const GradientCanvas = forwardRef<HTMLDivElement, GradientCanvasProps>(
     };
 
     return (
-      <div className="flex flex-col items-center space-y-6 flex-1">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={handleZoomOut}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Zoom Out"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </button>
-          <span className="text-sm text-gray-600 min-w-[60px] text-center">
-            {Math.round(zoom * 100)}%
-          </span>
-          <button
-            onClick={handleZoomIn}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Zoom In"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </button>
-        </div>
-
+      <div className="flex flex-col space-y-4">
         <div className="overflow-auto max-w-full max-h-full">
           <div
             ref={ref}
             className="relative bg-white rounded-xl shadow-lg overflow-hidden"
             style={canvasStyle}
           >
+            <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 p-2 bg-white/70 backdrop-blur-sm rounded-lg shadow-md">
+              <button
+                onClick={handleZoomOut}
+                className="p-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              <span className="text-xs text-gray-600 min-w-[40px] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                onClick={handleZoomIn}
+                className="p-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+            </div>
             <div
               ref={canvasRef}
               className={`absolute inset-0 ${gradientState.adjustColorPosition ? 'cursor-crosshair' : ''}`}
@@ -156,6 +155,7 @@ export const GradientCanvas = forwardRef<HTMLDivElement, GradientCanvasProps>(
       </div>
     );
   }
+
 );
 
 GradientCanvas.displayName = 'GradientCanvas';

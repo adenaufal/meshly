@@ -25,7 +25,7 @@ export function Sidebar({
   onColorSelect,
 }: SidebarProps) {
   return (
-    <aside className="w-80 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0 max-h-screen">
+    <aside className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
       <div className="p-4 space-y-2">
         <ColorSection
           colors={gradientState.colors}

@@ -5,28 +5,26 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
+import tseslint from 'typescript-eslint';
+
 export default tseslint.config(
   { ignores: ['dist'] },
+  ...tseslint.configs.recommended,
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended, 'plugin:react/recommended'],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
       ecmaVersion: 2020,
-      globals: globals.browser,
     },
     plugins: {
-      react,
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
     },
     rules: {
       'react/jsx-uses-react': 'off',
       'react/react-in-jsx-scope': 'off',
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
     },
   }
 );

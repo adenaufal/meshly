@@ -71,7 +71,7 @@ function App() {
   }, [gradientState.colors, updateColors]);
 
   return (
-    <div className="min-h-screen bg-gray-50 font-lato flex flex-col">
+    <div className="h-screen bg-gray-50 font-lato flex flex-col overflow-hidden">
       <Header 
         onExport={() => setShowExportModal(true)}
         onRandomize={randomizeGradient}
@@ -88,7 +88,7 @@ function App() {
           onColorSelect={setSelectedColorId}
         />
         
-        <main className="flex-1 p-6 overflow-auto flex flex-col">
+        <main className="flex-1 p-6 flex flex-col relative">
           <GradientCanvas
             ref={canvasRef}
             gradientState={gradientState}
@@ -102,16 +102,16 @@ function App() {
             selectedColorId={selectedColorId}
           />
           
-          <div className="mt-6 text-center">
+          <div className="absolute bottom-6 left-6 text-center">
             <p className="text-sm text-gray-500">
               Created by{' '}
               <a 
-                href="https://github.com/yourusername/meshly" 
-                target="_blank" 
+                href="https://github.com/adenaufal"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-purple-600 hover:text-purple-700 underline"
               >
-                @yourusername
+                @adenaufal
               </a>
             </p>
           </div>
