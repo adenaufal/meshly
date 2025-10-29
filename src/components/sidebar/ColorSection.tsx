@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Palette, Shuffle, Plus, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Palette, Plus, X } from 'lucide-react';
 import { ColorPoint, ColorPreset } from '../../types/gradient';
+import { PaletteSelector } from './PaletteSelector';
+import { RandomizeColorsButton } from './RandomizeColorsButton';
 
 interface ColorSectionProps {
   colors: ColorPoint[];
@@ -180,103 +182,44 @@ export function ColorSection({
                 />
               </div>
             )}
-
-            <button
-              onClick={randomizeColors}
-              className="flex items-center space-x-2 px-3 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
-            >
-              <Shuffle className="w-4 h-4" />
-              <span>Randomize colors</span>
-            </button>
+            <RandomizeColorsButton onClick={randomizeColors} />
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Choose Palette</h4>
-            <div className="relative">
-              <select
-                value={selectedPreset.name}
-                onChange={(e) => {
-                  const preset = colorPresets.find(p => p.name === e.target.value);
-                  if (preset) applyPreset(preset);
-                }}
-                className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white"
-              >
-                {colorPresets.map((preset) => (
-                  <option key={preset.name} value={preset.name}>
-                    {preset.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex space-x-1">
-                {selectedPreset.colors.slice(0, 3).map((color, index) => (
-                  <div
-                    key={index}
-                    className="w-3 h-3 rounded-full border border-gray-200"
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
+          <PaletteSelector
+            presets={colorPresets}
+            selectedPreset={selectedPreset}
+            onSelect={applyPreset}
+          />
 
           <div className="flex items-center justify-between">
-              <button
-                onClick={randomizeColors}
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
-              >
-                <Shuffle className="w-4 h-4" />
-                <span>Randomize colors</span>
-              </button>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={adjustColorPosition}
-                    onChange={(e) => onAdjustColorPositionChange(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <div className={`w-10 h-6 rounded-full transition-colors ${
+            <RandomizeColorsButton onClick={randomizeColors} />
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={adjustColorPosition}
+                  onChange={(e) => onAdjustColorPositionChange(e.target.checked)}
+                  className="sr-only"
+                />
+                <div
+                  className={`w-10 h-6 rounded-full transition-colors ${
                     adjustColorPosition ? 'bg-purple-600' : 'bg-gray-300'
-                  }`}>
-                    <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${
-                      adjustColorPosition ? 'translate-x-5' : 'translate-x-1'
-                    } mt-1`} />
-                  </div>
-                </div>
-                <span className="text-sm text-gray-700">Adjust position: {adjustColorPosition ? 'On' : 'Off'}</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Choose Palette</h4>
-            <div className="relative">
-              <select
-                value={selectedPreset.name}
-                onChange={(e) => {
-                  const preset = colorPresets.find(p => p.name === e.target.value);
-                  if (preset) applyPreset(preset);
-                }}
-                className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white"
-              >
-                {colorPresets.map((preset) => (
-                  <option key={preset.name} value={preset.name}>
-                    {preset.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex space-x-1">
-                {selectedPreset.colors.slice(0, 3).map((color, index) => (
+                  }`}
+                >
                   <div
-                    key={index}
-                    className="w-3 h-3 rounded-full border border-gray-200"
-                    style={{ backgroundColor: color }}
+                    className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${
+                      adjustColorPosition ? 'translate-x-5' : 'translate-x-1'
+                    } mt-1`}
                   />
-                ))}
+                </div>
               </div>
-            </div>
+              <span className="text-sm text-gray-700">
+                Adjust position: {adjustColorPosition ? 'On' : 'Off'}
+              </span>
+            </label>
           </div>
         </div>
+
       )}
     </div>
   );

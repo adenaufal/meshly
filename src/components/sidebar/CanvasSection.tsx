@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Monitor, RotateCcw, RotateCw } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, Monitor, RotateCw } from 'lucide-react';
 import { CanvasState, GradientState } from '../../types/gradient';
 
 interface CanvasSectionProps {
@@ -55,17 +55,86 @@ const ratioPresets = [
   '4:7', '7:8', '9:16'
 ];
 
+const MAX_CANVAS_DIMENSION = 8000;
+const MIN_CANVAS_DIMENSION = 1;
+const PERFORMANCE_DIMENSION_THRESHOLD = 4000;
+const PERFORMANCE_AREA_THRESHOLD = 24000000;
+
+type DimensionKey = 'width' | 'height';
+type DimensionErrors = Partial<Record<DimensionKey, string>>;
+
 export function CanvasSection({ canvas, onCanvasChange, onGradientStateChange }: CanvasSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState('Choose Template');
+  const [dimensionErrors, setDimensionErrors] = useState<DimensionErrors>({});
 
-  const updateDimension = (key: 'width' | 'height', value: number) => {
-    onCanvasChange({ ...canvas, [key]: value });
+  const clampDimension = (value: number) => {
+    if (!Number.isFinite(value)) {
+      return MIN_CANVAS_DIMENSION;
+    }
+    const rounded = Math.round(value);
+    return Math.min(MAX_CANVAS_DIMENSION, Math.max(MIN_CANVAS_DIMENSION, rounded));
+  };
+
+  const applyCanvasUpdate = (updates: Partial<CanvasState>) => {
+    const nextState = { ...canvas, ...updates };
+
+    const clampedWidth = clampDimension(nextState.width);
+    const clampedHeight = clampDimension(nextState.height);
+
+    const nextCanvas: CanvasState = {
+      ...nextState,
+      width: clampedWidth,
+      height: clampedHeight,
+    };
+
+    setDimensionErrors((prev) => {
+      const next: DimensionErrors = { ...prev };
+
+      if (clampedWidth !== nextState.width) {
+        next.width =
+          nextState.width > MAX_CANVAS_DIMENSION
+            ? `Maximum size is ${MAX_CANVAS_DIMENSION}px`
+            : `Minimum size is ${MIN_CANVAS_DIMENSION}px`;
+      } else if (updates.width !== undefined) {
+        delete next.width;
+      }
+
+      if (clampedHeight !== nextState.height) {
+        next.height =
+          nextState.height > MAX_CANVAS_DIMENSION
+            ? `Maximum size is ${MAX_CANVAS_DIMENSION}px`
+            : `Minimum size is ${MIN_CANVAS_DIMENSION}px`;
+      } else if (updates.height !== undefined) {
+        delete next.height;
+      }
+
+      return next;
+    });
+
+    onCanvasChange(nextCanvas);
+  };
+
+  const updateDimension = (key: DimensionKey, rawValue: string) => {
+    const trimmedValue = rawValue.trim();
+
+    if (trimmedValue === '') {
+      setDimensionErrors((prev) => ({ ...prev, [key]: 'Enter a numeric value' }));
+      return;
+    }
+
+    const numericValue = Number(trimmedValue);
+
+    if (!Number.isFinite(numericValue)) {
+      setDimensionErrors((prev) => ({ ...prev, [key]: 'Enter a numeric value' }));
+      return;
+    }
+
+    applyCanvasUpdate({ [key]: numericValue } as Partial<CanvasState>);
   };
 
   const applyTemplate = (template: any) => {
-    onCanvasChange({
-      ...canvas,
+    applyCanvasUpdate({
       width: template.width,
       height: template.height,
       ratio: template.ratio,
@@ -79,8 +148,7 @@ export function CanvasSection({ canvas, onCanvasChange, onGradientStateChange }:
     const width = Math.round(baseSize * (w / Math.max(w, h)));
     const height = Math.round(baseSize * (h / Math.max(w, h)));
     
-    onCanvasChange({
-      ...canvas,
+    applyCanvasUpdate({
       width,
       height,
       ratio,
@@ -88,8 +156,7 @@ export function CanvasSection({ canvas, onCanvasChange, onGradientStateChange }:
   };
 
   const toggleOrientation = () => {
-    onCanvasChange({
-      ...canvas,
+    applyCanvasUpdate({
       width: canvas.height,
       height: canvas.width,
       ratio: canvas.ratio.split(':').reverse().join(':'),
@@ -100,6 +167,14 @@ export function CanvasSection({ canvas, onCanvasChange, onGradientStateChange }:
     { name: '0.5x', value: 0.5 },
     { name: '2x', value: 2 },
   ];
+
+  const pixelCount = canvas.width * canvas.height;
+  const formattedPixelCount = new Intl.NumberFormat().format(pixelCount);
+  const isLargeCanvas =
+    canvas.width >= PERFORMANCE_DIMENSION_THRESHOLD ||
+    canvas.height >= PERFORMANCE_DIMENSION_THRESHOLD ||
+    pixelCount >= PERFORMANCE_AREA_THRESHOLD;
+  const hasDimensionErrors = Boolean(dimensionErrors.width || dimensionErrors.height);
 
   return (
     <div className="border border-gray-200 rounded-lg">
@@ -152,20 +227,75 @@ export function CanvasSection({ canvas, onCanvasChange, onGradientStateChange }:
               <input
                 type="number"
                 value={canvas.width}
-                onChange={(e) => updateDimension('width', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                min={MIN_CANVAS_DIMENSION}
+                max={MAX_CANVAS_DIMENSION}
+                inputMode="numeric"
+                aria-invalid={dimensionErrors.width ? 'true' : 'false'}
+                aria-describedby={dimensionErrors.width ? 'canvas-width-error' : undefined}
+                onChange={(e) => updateDimension('width', e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg text-sm focus:ring-2 focus:border-transparent ${
+                  dimensionErrors.width
+                    ? 'border-red-300 focus:ring-red-500 focus:ring-opacity-50'
+                    : 'border-gray-300 focus:ring-purple-500'
+                }`}
               />
+              {dimensionErrors.width && (
+                <p className="mt-1 text-xs text-red-600" id="canvas-width-error">
+                  {dimensionErrors.width}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Height</label>
               <input
                 type="number"
                 value={canvas.height}
-                onChange={(e) => updateDimension('height', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                min={MIN_CANVAS_DIMENSION}
+                max={MAX_CANVAS_DIMENSION}
+                inputMode="numeric"
+                aria-invalid={dimensionErrors.height ? 'true' : 'false'}
+                aria-describedby={dimensionErrors.height ? 'canvas-height-error' : undefined}
+                onChange={(e) => updateDimension('height', e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg text-sm focus:ring-2 focus:border-transparent ${
+                  dimensionErrors.height
+                    ? 'border-red-300 focus:ring-red-500 focus:ring-opacity-50'
+                    : 'border-gray-300 focus:ring-purple-500'
+                }`}
               />
+              {dimensionErrors.height && (
+                <p className="mt-1 text-xs text-red-600" id="canvas-height-error">
+                  {dimensionErrors.height}
+                </p>
+              )}
             </div>
           </div>
+
+          {hasDimensionErrors && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div className="space-y-1">
+                <div>
+                  Some canvas dimensions were adjusted to stay within the supported range (
+                  {MIN_CANVAS_DIMENSION}px - {MAX_CANVAS_DIMENSION}px).
+                </div>
+                <div className="text-[11px] text-red-600">
+                  Check the highlighted fields above and update them if needed.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isLargeCanvas && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div className="space-y-1">
+                <div>Large canvas sizes may impact rendering and export performance.</div>
+                <div className="text-[11px] text-amber-600">
+                  Current size: {canvas.width}×{canvas.height}px ({formattedPixelCount} pixels)
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -174,7 +304,7 @@ export function CanvasSection({ canvas, onCanvasChange, onGradientStateChange }:
                 {scalePresets.map((preset) => (
                   <button
                     key={preset.name}
-                    onClick={() => onCanvasChange({ ...canvas, scale: preset.value })}
+                    onClick={() => applyCanvasUpdate({ scale: preset.value })}
                     className={`px-2 py-1 text-xs rounded transition-colors ${
                       canvas.scale === preset.value
                         ? 'bg-purple-600 text-white'
@@ -192,7 +322,7 @@ export function CanvasSection({ canvas, onCanvasChange, onGradientStateChange }:
               max="2"
               step="0.1"
               value={canvas.scale}
-              onChange={(e) => onCanvasChange({ ...canvas, scale: Number(e.target.value) })}
+              onChange={(e) => applyCanvasUpdate({ scale: Number(e.target.value) })}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
             />
             <div className="text-center text-sm text-gray-600">{canvas.scale}x</div>

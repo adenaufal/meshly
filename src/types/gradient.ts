@@ -23,11 +23,20 @@ export interface CanvasState {
   ratio: string;
 }
 
+export type AnimationEasing = 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out';
+
+export interface AnimationState {
+  isPlaying: boolean;
+  speed: number; // multiplier
+  duration: number; // seconds
+  easing: AnimationEasing;
+}
+
 export interface GradientState {
   colors: ColorPoint[];
   filters: FilterState;
   canvas: CanvasState;
-  animationSpeed: number;
+  animation: AnimationState;
   blendMode: string;
   adjustColorPosition: boolean;
 }
